@@ -1,0 +1,14 @@
+# Ignore large user uploads and temp files
+vault/*.jpg
+vault/*.png
+vault/*.jpeg
+vault/*.pdf
+vault/*.docx
+vault/*.mp3
+vault/*.wav
+vault/*backup*
+vault/*.bak
+vault/*.old
+.DS_Store
+__pycache__/
+*.pyc
