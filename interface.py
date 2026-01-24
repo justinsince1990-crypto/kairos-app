@@ -365,25 +365,33 @@ with tab_chat:
 
         with st.chat_message("assistant"):
             with st.spinner("Kairos is thinking..."):
+                # --- UPDATED RESPONSE LOGIC ---
                 stream_response = get_response(
                     st.session_state.messages,
-                    temperature=st.session_state['temperature'],
+                    temperature=st.session_state.get('temperature', 1.0),
                     image_path=st.session_state.get('last_image', None),
-                    use_non_reasoning=st.session_state['use_non_reasoning']
+                    use_non_reasoning=st.session_state.get('use_non_reasoning', False)
                 )
+                
                 full_response = ""
                 placeholder = st.empty()
-                for line in stream_response.iter_lines():
-                    if line:
-                        try:
-                            data = json.loads(line.decode('utf-8')[6:])
-                            if "choices" in data and data["choices"]:
-                                delta = data["choices"][0]["delta"].get("content", "")
-                                full_response += delta
-                                placeholder.markdown(full_response + "▌")
-                        except:
-                            pass
-                placeholder.markdown(full_response)
+
+                # Fix: Check if we got an error string instead of a stream
+                if isinstance(stream_response, str):
+                    full_response = stream_response
+                    placeholder.markdown(full_response)
+                else:
+                    for line in stream_response.iter_lines():
+                        if line:
+                            try:
+                                data = json.loads(line.decode('utf-8')[6:])
+                                if "choices" in data and data["choices"]:
+                                    delta = data["choices"][0]["delta"].get("content", "")
+                                    full_response += delta
+                                    placeholder.markdown(full_response + "▌")
+                            except:
+                                pass
+                    placeholder.markdown(full_response)
 
             play_audio(full_response, len(st.session_state.messages), autoplay=st.session_state['auto_voice'])
 
