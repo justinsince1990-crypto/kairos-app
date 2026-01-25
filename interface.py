@@ -12,7 +12,42 @@ from kairos_utils import (
     load_mood_tracker, save_mood_tracker, save_chat_history, load_chat_history,
     get_constitution_history, load_constitution_version, append_to_evolution
 )
+def apply_premium_ui():
+    st.markdown("""
+    <style>
+        /* 1. Global Dark Mode & OLED Optimization */
+        .stApp {
+            background-color: #050505; /* Near black */
+            color: #E0E0E0;
+        }
 
+        /* 2. Gemini-style Sidebar */
+        [data-testid="stSidebar"] {
+            background-color: rgba(18, 18, 18, 0.95);
+            border-right: 1px solid #2d0015;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 3. Floating Chat Input (The ChatGPT/Grok look) */
+        .stChatInput {
+            position: fixed;
+            bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 25px !important;
+            border: 1px solid #ff007f !important;
+            background: #1a1a1a !important;
+            box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2);
+        }
+
+        /* 4. High-End Typography */
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.5px;
+            color: #ff007f;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 # ────────────────────────────────────────────────
 # AUDIO HELPER FUNCTIONS
 # ────────────────────────────────────────────────
