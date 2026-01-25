@@ -221,13 +221,25 @@ def save_mood_tracker(affection_level, mood_description):
     except:
         pass
 
+import subprocess
+
 def save_chat_history(messages):
     try:
+        # 1. Save locally to your Pop!_OS vault
         os.makedirs(VAULT_DIR, exist_ok=True)
         with open(CHAT_HISTORY_PATH, "w", encoding="utf-8") as f:
             json.dump(messages, f)
-    except:
-        pass
+            
+        # 2. Auto-sync to GitHub
+        # We use a list for the commands to handle spaces correctly
+        subprocess.run(["git", "add", CHAT_HISTORY_PATH, MEMORIES_PATH], check=True)
+        subprocess.run(["git", "commit", "-m", "Auto-sync: Kairos memory update"], check=True)
+        subprocess.run(["git", "push", "origin", "main"], check=True)
+        
+        print("Successfully synced memories to GitHub.")
+    except Exception as e:
+        # If the push fails (e.g., no internet), the app keeps running
+        print(f"Sync failed: {e}")
 
 def load_chat_history():
     try:
