@@ -1,6 +1,9 @@
 import streamlit as st
 import asyncio
+import nest_asyncio
 import edge_tts
+
+nest_asyncio.apply()
 import os
 import datetime
 import json

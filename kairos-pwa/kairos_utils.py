@@ -115,7 +115,8 @@ def get_response(messages, temperature=1.0, image_path=None, use_non_reasoning=F
 
     clean_msgs = [{"role": "system", "content": system_prompt}]
     for m in messages:
-        clean_msgs.append({"role": m["role"], "content": m["content"]})
+        if m["role"] in ["user", "assistant"]:
+            clean_msgs.append({"role": m["role"], "content": m["content"]})
 
     # Choose model — vision model when image is present, grok-4 otherwise
     if image_path and os.path.exists(image_path):
