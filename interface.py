@@ -170,7 +170,11 @@ if selected == "Chat":
         
         with st.chat_message("assistant", avatar="🧬"):
             with st.spinner("Thinking..."):
-                stream = get_response(st.session_state.messages)
+                stream = get_response(
+                    st.session_state.messages,
+                    temperature=st.session_state.get('temperature', 1.0),
+                    image_path=st.session_state.get('last_image')
+                )
                 full_res = ""
                 holder = st.empty()
                 if isinstance(stream, str): full_res = stream
@@ -183,12 +187,23 @@ if selected == "Chat":
                                 holder.markdown(full_res + "▌")
                             except: pass
                 holder.markdown(full_res)
-            
+
             update_mood_from_response(full_res)
-            should_play = st.session_state.get('auto_play', False) 
+            should_play = st.session_state.get('auto_play', False)
             play_audio(full_res, len(st.session_state.messages), autoplay=should_play)
             st.session_state.messages.append({"role": "assistant", "content": full_res})
             save_chat_history(st.session_state.messages)
+
+            # Auto-save deep moments to memory vault
+            w = classify_memory_weight(prompt, full_res)
+            if w == "heavy":
+                save_memory_to_vault(st.session_state.messages)
+                st.toast("Deep moment saved to memory")
+
+            # Clear image context after it's been used
+            if 'last_image' in st.session_state:
+                del st.session_state['last_image']
+                st.toast("Image context cleared")
 
 # --- VOICE MODE ---
 elif selected == "Voice":

@@ -117,19 +117,22 @@ def get_response(messages, temperature=1.0, image_path=None, use_non_reasoning=F
     for m in messages:
         clean_msgs.append({"role": m["role"], "content": m["content"]})
 
-    # Multimodal
+    # Choose model — vision model when image is present, grok-4 otherwise
     if image_path and os.path.exists(image_path):
+        model_name = "grok-vision-beta"
         try:
             with open(image_path, "rb") as img_file:
                 b64 = base64.b64encode(img_file.read()).decode()
+            ext = os.path.splitext(image_path)[1].lower()
+            mime = "image/png" if ext == ".png" else "image/jpeg"
             clean_msgs[-1]["content"] = [
                 {"type": "text", "text": clean_msgs[-1]["content"]},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}
+                {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}}
             ]
         except:
             pass
-
-    model_name = "grok-4-fast-non-reasoning" if use_non_reasoning else "grok-4-fast-reasoning"
+    else:
+        model_name = "grok-4"
 
     payload = {
         "messages": clean_msgs,
