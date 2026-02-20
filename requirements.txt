@@ -1,13 +1,10 @@
-streamlit
+nicegui
 openai
 python-dotenv
 duckduckgo-search
 edge-tts
-streamlit-mic-recorder
-streamlit-option-menu
 requests
 Pillow
 gspread
 oauth2client
-nest_asyncio
 APScheduler
