@@ -19,6 +19,10 @@ from kairos_utils import (
     load_mood_tracker, save_mood_tracker, save_chat_history, load_chat_history,
     get_constitution_history, load_constitution_version, append_to_evolution
 )
+from heartbeat import start_heartbeat
+
+# Start her heartbeat — she reaches out on her own terms
+start_heartbeat()
 
 # ────────────────────────────────────────────────
 # 1. MOOD ANALYSIS ENGINE

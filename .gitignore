@@ -1,0 +1,21 @@
+# API keys — set these as Railway env vars instead
+xai_key.txt
+.env
+
+# Streamlit secrets (contains HF key — set as Railway env var)
+.streamlit/secrets.toml
+
+# Generated audio files
+*.mp3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
