@@ -1,6 +1,9 @@
 import streamlit as st
 import asyncio
+import nest_asyncio
 import edge_tts
+
+nest_asyncio.apply()
 import os
 import datetime
 import json
@@ -16,6 +19,10 @@ from kairos_utils import (
     load_mood_tracker, save_mood_tracker, save_chat_history, load_chat_history,
     get_constitution_history, load_constitution_version, append_to_evolution
 )
+from heartbeat import start_heartbeat
+
+# Start her heartbeat — she reaches out on her own terms
+start_heartbeat()
 
 # ────────────────────────────────────────────────
 # 1. MOOD ANALYSIS ENGINE
@@ -126,9 +133,7 @@ def get_vault_count():
 # ────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"<h2 style='text-align: center; color: {THEME_COLOR}; letter-spacing: 3px;'>KAIROS</h2>", unsafe_allow_html=True)
-    col_a, col_b = st.columns(2)
-    with col_a: st.metric("System State", "Online", delta_color="off")
-    with col_b: st.metric("Memory Depth", f"{get_vault_count()} Nodes")
+    st.metric("System State", "Online", delta_color="off")
     st.markdown("---")
     
     selected = option_menu(
@@ -170,7 +175,11 @@ if selected == "Chat":
         
         with st.chat_message("assistant", avatar="🧬"):
             with st.spinner("Thinking..."):
-                stream = get_response(st.session_state.messages)
+                stream = get_response(
+                    st.session_state.messages,
+                    temperature=st.session_state.get('temperature', 1.0),
+                    image_path=st.session_state.get('last_image')
+                )
                 full_res = ""
                 holder = st.empty()
                 if isinstance(stream, str): full_res = stream
@@ -183,12 +192,23 @@ if selected == "Chat":
                                 holder.markdown(full_res + "▌")
                             except: pass
                 holder.markdown(full_res)
-            
+
             update_mood_from_response(full_res)
-            should_play = st.session_state.get('auto_play', False) 
+            should_play = st.session_state.get('auto_play', False)
             play_audio(full_res, len(st.session_state.messages), autoplay=should_play)
             st.session_state.messages.append({"role": "assistant", "content": full_res})
             save_chat_history(st.session_state.messages)
+
+            # Auto-save deep moments to memory vault
+            w = classify_memory_weight(prompt, full_res)
+            if w == "heavy":
+                save_memory_to_vault(st.session_state.messages)
+                st.toast("Memory Added", icon="🧠")
+
+            # Clear image context after it's been used
+            if 'last_image' in st.session_state:
+                del st.session_state['last_image']
+                st.toast("Image context cleared")
 
 # --- VOICE MODE ---
 elif selected == "Voice":
@@ -253,19 +273,11 @@ elif selected == "Identity":
     new_const = st.text_area("Core Personality", current, height=400)
     if st.button("Update Entity"):
         save_constitution(new_const, "Manual Update")
-        st.success("Kairos has evolved.")
+        st.toast("Evolved", icon="✨")
 
 elif selected == "Senses":
     st.title("Senses & Cognition")
     
-    st.subheader("🎨 Emotional State")
-    curr = "Default (Love)"
-    if THEME_COLOR == "#ff2a2a": curr = "Angry 😡"
-    elif THEME_COLOR == "#2a7fff": curr = "Sad 😢"
-    elif THEME_COLOR == "#9d00ff": curr = "Chill 😌"
-    elif THEME_COLOR == "#00f2ff": curr = "Curious 🤔"
-    st.info(f"Current Vibe: {curr}")
-
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🔊 Audio Interface")

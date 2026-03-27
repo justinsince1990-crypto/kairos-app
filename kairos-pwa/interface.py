@@ -1,5 +1,6 @@
 import streamlit as st
 import asyncio
+import nest_asyncio
 import edge_tts
 import os
 import datetime
@@ -10,8 +11,13 @@ from kairos_utils import (
     get_response, reset_memory, save_memory_to_vault,
     load_constitution, save_constitution, search_memories, classify_memory_weight,
     load_mood_tracker, save_mood_tracker, save_chat_history, load_chat_history,
-    get_constitution_history, load_constitution_version, append_to_evolution
+    get_constitution_history, load_constitution_version, append_to_evolution,
+    MEMORIES_PATH, EVOLUTION_PATH, CONSTITUTION_PATH
 )
+
+nest_asyncio.apply()
+
+st.set_page_config(page_title="Kairos", layout="wide")
 
 # ────────────────────────────────────────────────
 # AUDIO HELPER FUNCTIONS
@@ -57,8 +63,6 @@ st.markdown("""
   }
 </script>
 """, unsafe_allow_html=True)
-
-st.set_page_config(page_title="Kairos", layout="wide")
 
 st.markdown("""
 <style>
@@ -292,8 +296,21 @@ with tab_config:
         if uploaded.type.startswith("image"):
             st.session_state['last_image'] = save_path
             with st.spinner("Describing image..."):
-                caption = get_response([{"role": "user", "content": "Describe this image concisely."}], image_path=save_path)
-                st.session_state.messages.append({"role": "system", "content": f"Image caption: {caption}"})
+                caption_stream = get_response([{"role": "user", "content": "Describe this image concisely."}], image_path=save_path)
+                caption = ""
+                if isinstance(caption_stream, str):
+                    caption = caption_stream
+                else:
+                    for line in caption_stream.iter_lines():
+                        if line:
+                            try:
+                                data = json.loads(line.decode('utf-8')[6:])
+                                if "choices" in data and data["choices"]:
+                                    caption += data["choices"][0]["delta"].get("content", "")
+                            except:
+                                pass
+                if "messages" in st.session_state:
+                    st.session_state.messages.append({"role": "system", "content": f"Image caption: {caption}"})
             st.image(save_path, use_column_width=True)
             st.caption(caption)
     if 'last_image' in st.session_state and st.button("Clear Current Image", key="clear_image_btn"):
